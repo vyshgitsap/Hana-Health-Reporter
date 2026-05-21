@@ -1,0 +1,7 @@
+✅ SAP HANA Free Edition   → live queries on real monitoring views
+✅ Read-only security      → BASISPILOT user with least-privilege grants
+✅ Claude API              → AI-generated Basis health analysis
+✅ HTML report             → professional self-contained output
+✅ SAP BTP Cloud Foundry   → deployed, public URL live
+✅ Cloud Connector         → installed, connected to BTP subaccount
+✅ GitHub repo             → clean, public, portfolio-ready
