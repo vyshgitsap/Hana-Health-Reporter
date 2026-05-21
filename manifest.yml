@@ -1,0 +1,23 @@
+# SAP BTP Cloud Foundry deployment
+#
+# Steps:
+#   cf login -a https://api.cf.ap10.hana.ondemand.com
+#   cf target -o trial-org -s dev
+#   cf set-env hana-health-reporter ANTHROPIC_API_KEY sk-ant-...
+#   cf set-env hana-health-reporter DEMO_MODE true
+#   cf push
+
+applications:
+- name: hana-health-reporter
+  memory: 256M
+  buildpacks:
+    - python_buildpack
+  command: python app.py
+  health-check-type: http
+  health-check-http-endpoint: /
+  env:
+    PYTHON_VERSION: "3.11"
+    DEMO_MODE: "false"
+    # Set secrets via cf set-env — never in this file:
+    # ANTHROPIC_API_KEY
+    # HANA_HOST, HANA_PORT, HANA_USER, HANA_PASSWORD

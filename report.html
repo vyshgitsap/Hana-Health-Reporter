@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HANA Health Report — VSA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing:border-box; margin:0; padding:0 }
+  body { background:#080e17; color:#b0c8dc;
+          font-family:'IBM Plex Sans',sans-serif; padding:32px 20px; min-height:100vh }
+  .wrap { max-width:860px; margin:0 auto }
+  .header { display:flex; justify-content:space-between; align-items:flex-start;
+             margin-bottom:16px; flex-wrap:wrap; gap:16px }
+  .brand { font-family:'IBM Plex Mono',monospace; font-size:11px; color:#3d5570;
+            letter-spacing:.1em; text-transform:uppercase; margin-bottom:6px }
+  .title { font-family:'IBM Plex Mono',monospace; font-size:22px;
+            font-weight:600; color:#e0eef8 }
+  .meta  { font-size:12px; color:#3d5570; margin-top:4px; font-family:'IBM Plex Mono',monospace }
+  .source-badge { font-family:'IBM Plex Mono',monospace; font-size:10px;
+                   padding:4px 10px; border-radius:3px;
+                   background:rgba(0,200,150,.1);
+                   color:#00c896;
+                   border:1px solid #00c89633 }
+  .score-card { background:#0d1825; border:1px solid #1a2d42; border-radius:8px;
+                 padding:24px 28px; margin-bottom:20px;
+                 display:flex; align-items:center; gap:28px; flex-wrap:wrap }
+  .score-ring { position:relative; width:100px; height:100px; flex-shrink:0 }
+  .score-ring svg { transform:rotate(-90deg) }
+  .score-num { position:absolute; inset:0; display:flex; flex-direction:column;
+                align-items:center; justify-content:center }
+  .score-num span:first-child { font-family:'IBM Plex Mono',monospace;
+                                  font-size:26px; font-weight:600; color:#e0eef8 }
+  .score-num span:last-child  { font-family:'IBM Plex Mono',monospace;
+                                  font-size:10px; color:#3d5570 }
+  .score-info { flex:1 }
+  .grade { font-family:'IBM Plex Mono',monospace; font-size:18px;
+            font-weight:600; color:#ff4757; margin-bottom:6px }
+  .summary-text { font-size:14px; color:#7ea8c4; line-height:1.6 }
+  .section { background:#0d1825; border:1px solid #1a2d42; border-radius:8px;
+              padding:0; margin-bottom:16px; overflow:hidden }
+  .section-head { padding:12px 18px; border-bottom:1px solid #1a2d42;
+                   font-family:'IBM Plex Mono',monospace; font-size:10px;
+                   color:#3d5570; letter-spacing:.08em; text-transform:uppercase }
+  table { width:100%; border-collapse:collapse }
+  td { padding:10px 18px; border-bottom:1px solid #0f1e2e; vertical-align:middle }
+  tr:last-child td { border-bottom:none }
+  tr:hover td { background:#0f1e2e }
+  .recs { padding:16px 18px }
+  ul { list-style:none; padding-left:0 }
+  ul li::before { content:"→ "; color:#3d5570; font-family:'IBM Plex Mono',monospace }
+  .footer { text-align:center; margin-top:28px;
+             font-family:'IBM Plex Mono',monospace; font-size:11px; color:#1e3048 }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div>
+      <div class="brand">SAP HANA Health Report</div>
+      <div class="title">System: VSA</div>
+      <div class="meta">
+        v2.00.088.00.1760424921 &nbsp;·&nbsp;
+        Usage: DEVELOPMENT &nbsp;·&nbsp;
+        Started: 2026-05-19 13:03:01
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+      <span class="source-badge">● LIVE DATA</span>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#3d5570">
+        2026-05-21 06:45 UTC
+      </span>
+    </div>
+  </div>
+
+  <!-- Refresh Button -->
+  <div style="text-align:right;margin-bottom:20px">
+    <form method="post" action="/run">
+      <button style="padding:8px 20px;background:#00a8ff;color:#fff;
+                     border:none;border-radius:5px;cursor:pointer;
+                     font-family:'IBM Plex Mono',monospace;font-size:12px">
+        ↻ Generate New Report
+      </button>
+    </form>
+  </div>
+
+  <!-- Score Card -->
+  <div class="score-card">
+    <div class="score-ring">
+      <svg width="100" height="100" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="42" fill="none" stroke="#1a2d42" stroke-width="8"/>
+        <circle cx="50" cy="50" r="42" fill="none"
+          stroke="#ff4757" stroke-width="8" stroke-linecap="round"
+          stroke-dasharray="263.9"
+          stroke-dashoffset="237.5"/>
+      </svg>
+      <div class="score-num">
+        <span>10</span><span>/100</span>
+      </div>
+    </div>
+    <div class="score-info">
+      <div class="grade">CRITICAL</div>
+      <div class="summary-text">SAP HANA system VSA (version 2.00.088, DEVELOPMENT) is in a CRITICAL state with a health score of 10/100, primarily driven by eight critical findings across disk and backup subsystems. The LOG volume is completely exhausted at 100% capacity (0.3 GB / 0.3 GB), posing an immediate risk of transaction halts, while all backup destination volumes (CATALOG_BACKUP, DATA_BACKUP, LOG_BACKUP, ROOTKEY_BACKUP) report zero total capacity at 100% utilisation, indicating broken or misconfigured backup paths and leaving the system in a completely unrecoverable state. Although all five HANA services are active and memory utilisation across all services is healthy (ranging from 2.7% to 25.9%), the absence of any backup catalog records and the critically full log and trace areas require immediate Basis intervention before this system suffers an unrecoverable outage.</div>
+    </div>
+  </div>
+
+  <!-- AI Findings -->
+  <div class="section">
+    <div class="section-head">AI Analysis — Health Findings</div>
+    <table>
+        <tr>
+          <td style="font-family:monospace;font-size:13px;color:#7eb8d4">Service Availability</td>
+          <td><span style="background:#00c89622;color:#00c896;border:1px solid #00c89655;
+              border-radius:3px;font-size:11px;padding:2px 8px;font-family:monospace;
+              font-weight:600">OK</span></td>
+          <td style="font-size:13px;color:#b0c8dc">All 5 services (compileserver, daemon, indexserver, nameserver, webdispatcher) are active on their designated ports.</td>
+        </tr>
+        <tr>
+          <td style="font-family:monospace;font-size:13px;color:#7eb8d4">Memory Usage - nameserver</td>
+          <td><span style="background:#00c89622;color:#00c896;border:1px solid #00c89655;
+              border-radius:3px;font-size:11px;padding:2px 8px;font-family:monospace;
+              font-weight:600">OK</span></td>
+          <td style="font-size:13px;color:#b0c8dc">nameserver is using 1.03 GB of 3.98 GB limit (25.9%), well within acceptable thresholds.</td>
+        </tr>
+        <tr>
+          <td style="font-family:monospace;font-size:13px;color:#7eb8d4">Memory Usage - indexserver</td>
+          <td><span style="background:#00c89622;color:#00c896;border:1px solid #00c89655;
+              border-radius:3px;font-size:11px;padding:2px 8px;font-family:monospace;
+              font-weight:600">OK</span></td>
+          <td style="font-size:13px;color:#b0c8dc">indexserver is using 0.95 GB of 3.78 GB limit (25.2%), well within acceptable thresholds.</td>
+        </tr>
+        <tr>
+          <td style="font-family:monospace;font-size:13px;color:#7eb8d4">Memory Usage - webdispatcher</td>
+          <td><span style="background:#00c89622;color:#00c896;border:1px solid #00c89655;
+              border-radius:3px;font-size:11px;padding:2px 8px;font-family:monospace;
+              font-weight:600">OK</span></td>
+          <td style="font-size:13px;color:#b0c8dc">webdispatcher is using 0.30 GB of 2.50 GB limit (11.8%), well within acceptable thresholds.</td>
+        </tr>
+        <tr>
+          <td style="font-family:monospace;font-size:13px;color:#7eb8d4">Memory Usage - compileserver</td>
+          <td><span style="background:#00c89622;color:#00c896;border:1px solid #00c89655;
+              border-radius:3px;font-size:11px;padding:2px 8px;font-family:monospace;
+              font-weight:600">OK</span></td>
+          <td style="font-size:13px;color:#b0c8dc">compileserver is using 0.05 GB of 1.86 GB limit (2.7%), well within acceptable thresholds.</td>
+        </tr>
+        <tr>
+          <td style="font-family:monospace;font-size:13px;color:#7eb8d4">Disk Usage - DATA</td>
+          <td><span style="background:#00c89622;color:#00c896;border:1px solid #00c89655;
+              border-radius:3px;font-size:11px;padding:2px 8px;font-family:monospace;
+              font-weight:600">OK</span></td>
+          <td style="font-size:13px;color:#b0c8dc">DATA volume is using 0.2 GB of 0.4 GB (47.3%), currently within safe limits but total capacity is very small.</td>
+        </tr>
+        <tr>
+          <td style="font-family:monospace;font-size:13px;color:#7eb8d4">Disk Usage - LOG</td>
+          <td><span style="background:#ff475722;color:#ff4757;border:1px solid #ff475755;
+              border-radius:3px;font-size:11px;padding:2px 8px;font-family:monospace;
+              font-weight:600">CRITICAL</span></td>
+          <td style="font-size:13px;color:#b0c8dc">LOG volume is at 100.0% capacity (0.3 GB used of 0.3 GB total), which will halt database transactions immediately.</td>
+        </tr>
+        <tr>
+          <td style="font-family:monospace;font-size:13px;color:#7eb8d4">Disk Usage - CATALOG_BACKUP</td>
+          <td><span style="background:#ff475722;color:#ff4757;border:1px solid #ff475755;
+              border-radius:3px;font-size:11px;padding:2px 8px;font-family:monospace;
+              font-weight:600">CRITICAL</span></td>
+          <td style="font-size:13px;color:#b0c8dc">CATALOG_BACKUP volume reports 0.0 GB total with 100.0% usage, indicating the backup path is misconfigured or unavailable.</td>
+        </tr>
+        <tr>
+          <td style="font-family:monospace;font-size:13px;color:#7eb8d4">Disk Usage - DATA_BACKUP</td>
+          <td><span style="background:#ff475722;color:#ff4757;border:1px solid #ff475755;
+              border-radius:3px;font-size:11px;padding:2px 8px;font-family:monospace;
+              font-weight:600">CRITICAL</span></td>
+          <td style="font-size:13px;color:#b0c8dc">DATA_BACKUP volume reports 0.0 GB total with 100.0% usage, indicating the backup path is misconfigured or unavailable.</td>
+        </tr>
+        <tr>
+          <td style="font-family:monospace;font-size:13px;color:#7eb8d4">Disk Usage - LOG_BACKUP</td>
+          <td><span style="background:#ff475722;color:#ff4757;border:1px solid #ff475755;
+              border-radius:3px;font-size:11px;padding:2px 8px;font-family:monospace;
+              font-weight:600">CRITICAL</span></td>
+          <td style="font-size:13px;color:#b0c8dc">LOG_BACKUP volume reports 0.0 GB total with 100.0% usage, meaning log backups cannot be written and log area will never be freed.</td>
+        </tr>
+        <tr>
+          <td style="font-family:monospace;font-size:13px;color:#7eb8d4">Disk Usage - ROOTKEY_BACKUP</td>
+          <td><span style="background:#ff475722;color:#ff4757;border:1px solid #ff475755;
+              border-radius:3px;font-size:11px;padding:2px 8px;font-family:monospace;
+              font-weight:600">CRITICAL</span></td>
+          <td style="font-size:13px;color:#b0c8dc">ROOTKEY_BACKUP volume reports 0.0 GB total with 100.0% usage, indicating the encryption root key backup path is misconfigured or unavailable.</td>
+        </tr>
+        <tr>
+          <td style="font-family:monospace;font-size:13px;color:#7eb8d4">Disk Usage - TRACE</td>
+          <td><span style="background:#ff475722;color:#ff4757;border:1px solid #ff475755;
+              border-radius:3px;font-size:11px;padding:2px 8px;font-family:monospace;
+              font-weight:600">CRITICAL</span></td>
+          <td style="font-size:13px;color:#b0c8dc">TRACE volume reports 100.8% usage against 0.0 GB total, indicating the trace directory path is misconfigured, unmounted, or completely full.</td>
+        </tr>
+        <tr>
+          <td style="font-family:monospace;font-size:13px;color:#7eb8d4">Backup Currency - DATA_BACKUP</td>
+          <td><span style="background:#ff475722;color:#ff4757;border:1px solid #ff475755;
+              border-radius:3px;font-size:11px;padding:2px 8px;font-family:monospace;
+              font-weight:600">CRITICAL</span></td>
+          <td style="font-size:13px;color:#b0c8dc">No data backup records exist in the backup catalog; the last successful data backup is completely unknown, posing a severe data loss risk.</td>
+        </tr>
+        <tr>
+          <td style="font-family:monospace;font-size:13px;color:#7eb8d4">Backup Currency - LOG_BACKUP</td>
+          <td><span style="background:#ff475722;color:#ff4757;border:1px solid #ff475755;
+              border-radius:3px;font-size:11px;padding:2px 8px;font-family:monospace;
+              font-weight:600">CRITICAL</span></td>
+          <td style="font-size:13px;color:#b0c8dc">No log backup records exist in the backup catalog; continuous log backup is not functioning, making point-in-time recovery impossible.</td>
+        </tr></table>
+  </div>
+
+  <!-- Services -->
+  <div class="section">
+    <div class="section-head">HANA Services (SYS.M_SERVICES)</div>
+    <table>
+        <tr>
+          <td style="font-family:monospace;font-size:13px;color:#7eb8d4">compileserver</td>
+          <td style="font-family:monospace;font-size:12px;color:#4a6a84">30010</td>
+          <td><span style="color:#00c896;font-size:11px;font-family:monospace;font-weight:600">● RUNNING</span></td>
+        </tr>
+        <tr>
+          <td style="font-family:monospace;font-size:13px;color:#7eb8d4">daemon</td>
+          <td style="font-family:monospace;font-size:12px;color:#4a6a84">30000</td>
+          <td><span style="color:#00c896;font-size:11px;font-family:monospace;font-weight:600">● RUNNING</span></td>
+        </tr>
+        <tr>
+          <td style="font-family:monospace;font-size:13px;color:#7eb8d4">indexserver</td>
+          <td style="font-family:monospace;font-size:12px;color:#4a6a84">30003</td>
+          <td><span style="color:#00c896;font-size:11px;font-family:monospace;font-weight:600">● RUNNING</span></td>
+        </tr>
+        <tr>
+          <td style="font-family:monospace;font-size:13px;color:#7eb8d4">nameserver</td>
+          <td style="font-family:monospace;font-size:12px;color:#4a6a84">30001</td>
+          <td><span style="color:#00c896;font-size:11px;font-family:monospace;font-weight:600">● RUNNING</span></td>
+        </tr>
+        <tr>
+          <td style="font-family:monospace;font-size:13px;color:#7eb8d4">webdispatcher</td>
+          <td style="font-family:monospace;font-size:12px;color:#4a6a84">30006</td>
+          <td><span style="color:#00c896;font-size:11px;font-family:monospace;font-weight:600">● RUNNING</span></td>
+        </tr></table>
+  </div>
+
+  <!-- Memory -->
+  <div class="section">
+    <div class="section-head">Memory Utilisation (SYS.M_SERVICE_MEMORY)</div>
+    <table>
+        <tr>
+          <td style="font-family:monospace;font-size:13px;color:#7eb8d4">nameserver</td>
+          <td style="font-family:monospace;font-size:12px;color:#4a6a84">1.03 / 3.98 GB</td>
+          <td style="min-width:120px">
+            <div style="background:#1a2a3a;border-radius:3px;height:6px;overflow:hidden">
+              <div style="background:#00c896;width:25.9%;height:100%;border-radius:3px"></div>
+            </div>
+            <span style="font-size:11px;font-family:monospace;color:#00c896">25.9%</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-family:monospace;font-size:13px;color:#7eb8d4">indexserver</td>
+          <td style="font-family:monospace;font-size:12px;color:#4a6a84">0.95 / 3.78 GB</td>
+          <td style="min-width:120px">
+            <div style="background:#1a2a3a;border-radius:3px;height:6px;overflow:hidden">
+              <div style="background:#00c896;width:25.2%;height:100%;border-radius:3px"></div>
+            </div>
+            <span style="font-size:11px;font-family:monospace;color:#00c896">25.2%</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-family:monospace;font-size:13px;color:#7eb8d4">webdispatcher</td>
+          <td style="font-family:monospace;font-size:12px;color:#4a6a84">0.3 / 2.5 GB</td>
+          <td style="min-width:120px">
+            <div style="background:#1a2a3a;border-radius:3px;height:6px;overflow:hidden">
+              <div style="background:#00c896;width:11.8%;height:100%;border-radius:3px"></div>
+            </div>
+            <span style="font-size:11px;font-family:monospace;color:#00c896">11.8%</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-family:monospace;font-size:13px;color:#7eb8d4">compileserver</td>
+          <td style="font-family:monospace;font-size:12px;color:#4a6a84">0.05 / 1.86 GB</td>
+          <td style="min-width:120px">
+            <div style="background:#1a2a3a;border-radius:3px;height:6px;overflow:hidden">
+              <div style="background:#00c896;width:2.7%;height:100%;border-radius:3px"></div>
+            </div>
+            <span style="font-size:11px;font-family:monospace;color:#00c896">2.7%</span>
+          </td>
+        </tr></table>
+  </div>
+
+  <!-- Disk -->
+  <div class="section">
+    <div class="section-head">Disk Usage (SYS.M_DISK_USAGE)</div>
+    <table>
+        <tr>
+          <td style="font-family:monospace;font-size:13px;color:#7eb8d4">CATALOG_BACKUP</td>
+          <td style="font-family:monospace;font-size:12px;color:#4a6a84">0.0 / 0.0 GB</td>
+          <td style="min-width:120px">
+            <div style="background:#1a2a3a;border-radius:3px;height:6px;overflow:hidden">
+              <div style="background:#ff4757;width:100.0%;height:100%;border-radius:3px"></div>
+            </div>
+            <span style="font-size:11px;font-family:monospace;color:#ff4757">100.0%</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-family:monospace;font-size:13px;color:#7eb8d4">DATA</td>
+          <td style="font-family:monospace;font-size:12px;color:#4a6a84">0.2 / 0.4 GB</td>
+          <td style="min-width:120px">
+            <div style="background:#1a2a3a;border-radius:3px;height:6px;overflow:hidden">
+              <div style="background:#00c896;width:47.3%;height:100%;border-radius:3px"></div>
+            </div>
+            <span style="font-size:11px;font-family:monospace;color:#00c896">47.3%</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-family:monospace;font-size:13px;color:#7eb8d4">DATA_BACKUP</td>
+          <td style="font-family:monospace;font-size:12px;color:#4a6a84">0.0 / 0.0 GB</td>
+          <td style="min-width:120px">
+            <div style="background:#1a2a3a;border-radius:3px;height:6px;overflow:hidden">
+              <div style="background:#ff4757;width:100.0%;height:100%;border-radius:3px"></div>
+            </div>
+            <span style="font-size:11px;font-family:monospace;color:#ff4757">100.0%</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-family:monospace;font-size:13px;color:#7eb8d4">LOG</td>
+          <td style="font-family:monospace;font-size:12px;color:#4a6a84">0.3 / 0.3 GB</td>
+          <td style="min-width:120px">
+            <div style="background:#1a2a3a;border-radius:3px;height:6px;overflow:hidden">
+              <div style="background:#ff4757;width:100.0%;height:100%;border-radius:3px"></div>
+            </div>
+            <span style="font-size:11px;font-family:monospace;color:#ff4757">100.0%</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-family:monospace;font-size:13px;color:#7eb8d4">LOG_BACKUP</td>
+          <td style="font-family:monospace;font-size:12px;color:#4a6a84">0.0 / 0.0 GB</td>
+          <td style="min-width:120px">
+            <div style="background:#1a2a3a;border-radius:3px;height:6px;overflow:hidden">
+              <div style="background:#ff4757;width:100.0%;height:100%;border-radius:3px"></div>
+            </div>
+            <span style="font-size:11px;font-family:monospace;color:#ff4757">100.0%</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-family:monospace;font-size:13px;color:#7eb8d4">ROOTKEY_BACKUP</td>
+          <td style="font-family:monospace;font-size:12px;color:#4a6a84">0.0 / 0.0 GB</td>
+          <td style="min-width:120px">
+            <div style="background:#1a2a3a;border-radius:3px;height:6px;overflow:hidden">
+              <div style="background:#ff4757;width:100.0%;height:100%;border-radius:3px"></div>
+            </div>
+            <span style="font-size:11px;font-family:monospace;color:#ff4757">100.0%</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-family:monospace;font-size:13px;color:#7eb8d4">TRACE</td>
+          <td style="font-family:monospace;font-size:12px;color:#4a6a84">0.0 / 0.0 GB</td>
+          <td style="min-width:120px">
+            <div style="background:#1a2a3a;border-radius:3px;height:6px;overflow:hidden">
+              <div style="background:#ff4757;width:100%;height:100%;border-radius:3px"></div>
+            </div>
+            <span style="font-size:11px;font-family:monospace;color:#ff4757">100.8%</span>
+          </td>
+        </tr></table>
+  </div>
+
+  <!-- Backup -->
+  <div class="section">
+    <div class="section-head">Last Backup (SYS.M_BACKUP_CATALOG)</div>
+    <table>
+      <tr>
+        <td style="font-family:monospace;font-size:13px;color:#7eb8d4">—</td>
+        <td style="font-family:monospace;font-size:12px;color:#4a6a84">No backup found</td>
+        <td style="font-family:monospace;font-size:12px;color:#ff4757;font-weight:600">UNKNOWN</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Recommendations -->
+  <div class="section">
+    <div class="section-head">Recommended Actions</div>
+    <div class="recs"><ul><li style="margin-bottom:8px;color:#b0c8dc;font-size:13px">IMMEDIATE: Free or expand the LOG volume (currently 100% full at 0.3 GB) to prevent transaction freeze — use HANA Studio or hdbsql to check log segment status, and extend the log volume via ALTER SYSTEM ALTER VOLUME or provision additional storage.</li><li style="margin-bottom:8px;color:#b0c8dc;font-size:13px">IMMEDIATE: Verify and reconfigure all backup destination paths (CATALOG_BACKUP, DATA_BACKUP, LOG_BACKUP, ROOTKEY_BACKUP) which all report 0.0 GB total — check 'basepath_catalogbackup', 'basepath_databackup', 'basepath_logbackup' parameters in HANA Studio under Configuration or via M_INIFILE_CONTENTS.</li><li style="margin-bottom:8px;color:#b0c8dc;font-size:13px">IMMEDIATE: Trigger a full data backup once backup paths are corrected using BACKUP DATA FULL TO FILE '<path>' in hdbsql or via HANA Studio (SAP Note 1642148), as there is currently no restorable backup.</li><li style="margin-bottom:8px;color:#b0c8dc;font-size:13px">IMMEDIATE: Enable and verify log backup mode — confirm the database is in LOG_MODE = 'normal' via SELECT * FROM M_INIFILE_CONTENTS WHERE KEY = 'log_mode', and ensure log backup destinations are writable to prevent log area exhaustion.</li><li style="margin-bottom:8px;color:#b0c8dc;font-size:13px">HIGH PRIORITY: Investigate the TRACE volume showing 100.8% usage against 0.0 GB — identify the trace file path via M_TRACEFILES and clean up old trace files using ALTER SYSTEM CLEAR TRACES or manually remove files older than 14 days (SAP Note 1501917).</li><li style="margin-bottom:8px;color:#b0c8dc;font-size:13px">HIGH PRIORITY: Restore or provision the ROOTKEY_BACKUP path immediately — loss of root key backup means encrypted data volumes cannot be recovered after a system failure (SAP Note 2159401).</li><li style="margin-bottom:8px;color:#b0c8dc;font-size:13px">Review overall disk provisioning for this DEVELOPMENT system — total DATA volume is only 0.4 GB, which is insufficient even for development use; consider expanding volumes via the storage layer and reflecting changes in SAP HANA disk configuration.</li><li style="margin-bottom:8px;color:#b0c8dc;font-size:13px">Schedule regular backup monitoring using HANA Cockpit or set up alerts in M_BACKUP_CATALOG to notify on backup failures or gaps exceeding 24 hours.</li><li style="margin-bottom:8px;color:#b0c8dc;font-size:13px">After stabilisation, review system sizing against SAP HANA Hardware and Cloud Measurement Tools (HCMT) guidelines, as memory limits (max 3.98 GB for nameserver) suggest this is a minimal-resource development instance that may need resizing.</li></ul></div>
+  </div>
+
+  <div class="footer">
+    Generated by HANA Health Reporter &nbsp;·&nbsp;
+    Powered by Anthropic Claude API &nbsp;·&nbsp;
+    Deployed on SAP BTP Cloud Foundry
+  </div>
+
+</div>
+</body>
+</html>
