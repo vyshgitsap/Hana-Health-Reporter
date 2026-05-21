@@ -6,7 +6,7 @@
 
 ---
 ## Live Demo
-🌐 https://hana-health-reporter.cfapps.us10-001.hana.ondemand.com
+https://hana-health-reporter.cfapps.us10-001.hana.ondemand.com/
 
 
 ## What This Demonstrates
